@@ -70,9 +70,10 @@ class PrintSitePlugin(BasePlugin):
         # it is important 'print-site' is defined last in the 'plugins'
         plugins = config.get("plugins")
         if [*dict(plugins)][-1] != "print-site":
-            msg = "[mkdocs-print-site] 'print-site' should be defined as the *last* plugin,"
-            msg += "to ensure the print page has any changes other plugins make."
-            msg += "Whilst this plugin is set as priority(-100), other plugins may conflict."
+            msg = "[mkdocs-print-site] 'print-site' should be defined as the *last* plugin "
+            msg += "to ensure the print page has any changes other plugins make. "
+            msg += f"Last plugin is {[*dict(plugins)][-1]}. Plugin list is ${[*dict(plugins)]}. "
+            msg += "Whilst this plugin is set as priority(-100), other plugins may conflict. "
             msg += "Please update the 'plugins:' section in your mkdocs.yml"
             logger.info(msg)
 
