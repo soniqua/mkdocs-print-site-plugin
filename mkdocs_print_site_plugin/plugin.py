@@ -3,6 +3,7 @@ import re
 import logging
 import sys
 
+from mkdocs import plugins
 from mkdocs.plugins import BasePlugin
 from mkdocs.config import config_options
 from mkdocs.structure.files import File
@@ -17,6 +18,11 @@ logger = logging.getLogger("mkdocs.plugins")
 logger.addFilter(warning_filter)
 
 HERE = os.path.dirname(os.path.abspath(__file__))
+
+try:
+    from mkdocs.plugins import event_priority
+except ImportError:
+    event_priority = lambda priority: lambda f: f  # No-op fallback
 
 
 class PrintSitePlugin(BasePlugin):
@@ -44,6 +50,7 @@ class PrintSitePlugin(BasePlugin):
         ("exclude", config_options.Type(list, default=[])),
     )
 
+    @plugins.event_priority(-100) #Run after all other plugins
     def on_config(self, config, **kwargs):
         """
         Event trigger on config.
@@ -62,12 +69,12 @@ class PrintSitePlugin(BasePlugin):
         # (and thus which pages should be in the print page)
         # it is important 'print-site' is defined last in the 'plugins'
         plugins = config.get("plugins")
-        print_site_position = [*dict(plugins)].index("print-site")
-        if print_site_position != len(plugins) - 1:
+        if [*dict(plugins)][-1] != "print-site":
             msg = "[mkdocs-print-site] 'print-site' should be defined as the *last* plugin,"
             msg += "to ensure the print page has any changes other plugins make."
+            msg += "Whilst this plugin is set as priority(-100), other plugins may conflict."
             msg += "Please update the 'plugins:' section in your mkdocs.yml"
-            logger.warning(msg)
+            logger.info(msg)
 
         if "--dirtyreload" in sys.argv:
             msg = (
