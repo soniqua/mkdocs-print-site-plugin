@@ -13,6 +13,7 @@ from mkdocs.exceptions import PluginError
 
 from mkdocs_print_site_plugin.renderer import Renderer
 from mkdocs_print_site_plugin.utils import flatten_nav, get_theme_name
+from mkdocs_print_site_plugin.urls import is_external
 
 logger = logging.getLogger("mkdocs.plugins")
 logger.addFilter(warning_filter)
@@ -239,9 +240,13 @@ class PrintSitePlugin(BasePlugin):
 
         # Link to the PDF version of the entire site on a page.
         if self.config.get("path_to_pdf") != "":
-            page.url_to_pdf = get_relative_url(
-                self.config.get("path_to_pdf"), page.file.url
-            )
+            pdf_url = self.config.get("path_to_pdf")
+            if is_external(pdf_url):
+                page.url_to_pdf = pdf_url
+            else:
+                page.url_to_pdf = get_relative_url(
+                    pdf_url, page.file.url
+                )
 
         return html
 
@@ -287,7 +292,7 @@ class PrintSitePlugin(BasePlugin):
             if config.get('extra_css'):
                 self.context['extra_css'] = [get_relative_url(f, self.print_page.file.url) for f in config.get('extra_css')]
             if config.get('extra_javascript'):
-                self.context['extra_javascript'] = [get_relative_url(f, self.print_page.file.url) for f in config.get('extra_javascript')]
+                self.context['extra_javascript'] = [get_relative_url(str(f), self.print_page.file.url) for f in config.get('extra_javascript')]
 
 
     def on_post_build(self, config, **kwargs):
